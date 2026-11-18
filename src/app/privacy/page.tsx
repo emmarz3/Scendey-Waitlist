@@ -1,0 +1,1 @@
+import {ContentPage} from "@/components/content-pages";export const metadata={title:"Privacy notice · Draft",robots:{index:false,follow:false}};export default function Page(){return <ContentPage kind="privacy"/>}

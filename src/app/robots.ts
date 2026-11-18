@@ -1,0 +1,1 @@
+import type {MetadataRoute} from "next";export default function robots():MetadataRoute.Robots{const base=process.env.CANONICAL_URL??"http://localhost:3000";return{rules:[{userAgent:"*",allow:"/",disallow:["/admin","/my-status","/join/success","/confirm/","/unsubscribe/"]}],sitemap:`${base}/sitemap.xml`,host:base}}

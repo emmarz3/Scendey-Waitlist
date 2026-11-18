@@ -1,0 +1,1 @@
+import {AdminPage} from "@/components/admin";export const metadata={robots:{index:false,follow:false}};export default async function Page({searchParams}:{searchParams:Promise<{q?:string}>}){return <AdminPage section="Entries" search={(await searchParams).q??""}/>}

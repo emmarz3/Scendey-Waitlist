@@ -1,0 +1,6 @@
+"use client";
+import {useEffect,useRef,useState} from "react";
+import Link from "next/link";
+import {useParams} from "next/navigation";
+import {SiteShell} from "@/components/chrome";
+export default function Confirm(){const {token}=useParams<{token:string}>();const started=useRef(false);const [message,setMessage]=useState("Confirming your email…");const [referral,setReferral]=useState("");useEffect(()=>{if(started.current)return;started.current=true;fetch("/api/confirm",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({token})}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error);setMessage("Your email is confirmed. You’re on the SCENDEY waitlist.");setReferral(d.referralUrl)}).catch(e=>setMessage(e.message));},[token]);return <SiteShell><main id="main" className="page-content container"><div className="prose"><span className="eyebrow">Email verification</span><h1 className="section-title">{message.startsWith("Your email")?"You’re confirmed.":"Confirm your email"}</h1><p role="status" aria-live="polite">{message}</p>{referral&&<p>Share your personal invite link: <a href={referral}><u>{referral}</u></a></p>}<Link className="linkline" href="/my-status">View signup status</Link></div></main></SiteShell>}

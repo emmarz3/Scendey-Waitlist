@@ -1,0 +1,1 @@
+import {Suspense} from "react";import {MyStatusClient} from "@/components/my-status";export const metadata={title:"My status",robots:{index:false,follow:false},referrer:"no-referrer"};export default function Page(){return <Suspense fallback={<main className="page-content container"><p>Loading your status…</p></main>}><MyStatusClient/></Suspense>}

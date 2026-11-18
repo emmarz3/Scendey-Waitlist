@@ -1,0 +1,5 @@
+import type { Metadata } from "next";
+import { SiteShell } from "@/components/chrome";
+import { SignupForm } from "@/components/signup-form";
+export const metadata:Metadata={title:"Join the waitlist",robots:{index:false,follow:false}};
+export default async function Join({searchParams}:{searchParams:Promise<{type?:string}>}){const p=await searchParams;const role=p.type==="shopper"?"shopper":"brand";return <SiteShell><main id="main"><section className="page-hero"><div className="container"><span className="eyebrow">SCENDEY early access</span><h1>{role==="brand"?"Put your brand in motion.":"Find brands worth knowing."}</h1><p>{role==="brand"?"Join the list for progress updates and an invitation when early access is ready.":"Get thoughtful updates as SCENDEY makes room for more independent brands."}</p></div></section><section className="page-content container"><SignupForm role={role}/><p className="form-meta">Signing up as {role}? <a href={`/join?type=${role==="brand"?"shopper":"brand"}`}><u>Switch to {role==="brand"?"shopper":"brand"}</u></a>.</p></section></main></SiteShell>}

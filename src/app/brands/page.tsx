@@ -1,0 +1,1 @@
+import type {Metadata} from "next";import {ContentPage} from "@/components/content-pages";export const metadata:Metadata={title:"For brands",description:"A home for independent brands to get discovered and manage their business."};export default function Page(){return <ContentPage kind="brands"/>}

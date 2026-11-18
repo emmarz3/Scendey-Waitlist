@@ -1,0 +1,1 @@
+import {ContentPage} from "@/components/content-pages";export const metadata={title:"Campaign terms · Draft",robots:{index:false,follow:false}};export default function Page(){return <ContentPage kind="terms"/>}
