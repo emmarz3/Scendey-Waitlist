@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { clientKey, digest, rateLimit, token } from "@/lib/security";
+import { digest, rateLimit, token } from "@/lib/security";
 import { sendMail, templates } from "@/lib/email";
+import { notifyFormspree } from "@/lib/formspree";
 import { signupSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
-  const key = await clientKey("join");
-  if (!await rateLimit(key, 8)) return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Enter your details and try again." }, { status: 400 }); }
   if (body && typeof body === "object" && "website" in body && (body as { website?: string }).website) return NextResponse.json({ ok: true, existing: false, delivered: false });
   const parsed = signupSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Check the highlighted fields and try again.", fields: parsed.error.flatten().fieldErrors }, { status: 400 });
   const data = parsed.data;
+  // Limit each address, rather than a shared proxy IP. A legitimate visitor
+  // cannot exhaust another visitor's signup allowance.
+  const allowed = await rateLimit(`join:${digest(data.email).slice(0, 32)}`, 5, 15 * 60 * 1000);
+  if (allowed === null) return NextResponse.json({ error: "Signup is temporarily unavailable. Please try again shortly." }, { status: 503 });
+  if (!allowed) return NextResponse.json({ error: "Too many attempts for this email address. Please try again in 15 minutes." }, { status: 429, headers: { "Retry-After": "900" } });
   try {
     const found = await db.waitlistEntry.findUnique({ where: { email: data.email }, select: { id: true } });
     if (found) return NextResponse.json({ ok: true, existing: true, delivered: false, message: "That email is already registered. If you need help, contact us." });
@@ -32,7 +36,11 @@ export async function POST(request: Request) {
     await db.emailVerificationToken.create({ data: { digest: digest(raw), purpose: "VERIFY", entryId: entry.id, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) } });
     await db.analyticsEvent.create({ data: { name: "signup_submitted", role: data.role, source: data.source, entryId: entry.id } });
     const link = `${process.env.APP_URL ?? new URL(request.url).origin}/confirm/${raw}`;
-    const delivery = await sendMail({ to: data.email, ...templates.verification(link) });
+    const [delivery, notification] = await Promise.all([
+      sendMail({ to: data.email, ...templates.verification(link) }),
+      notifyFormspree({ email: data.email, name: data.role === "BRAND" ? data.brandName : data.name ?? "", role: data.role, category: data.role === "BRAND" ? data.category : "", signupId: entry.id, type: "waitlist_signup" })
+    ]);
+    if (!notification.sent && process.env.FORMSPREE_FORM_ID) console.warn(`[SCENDEY] Formspree waitlist notification failed: ${notification.reason}`);
     const response: Record<string, unknown> = { ok: true, existing: false, delivered: delivery.sent };
     if (!delivery.sent) response.message = "Your signup is saved, but email verification is unavailable right now. Please try again later or contact us.";
     if (!delivery.sent && process.env.NODE_ENV !== "production") response.previewVerificationUrl = link;
