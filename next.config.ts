@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
 
+const backend = process.env.BACKEND_URL?.replace(/\/$/, "");
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async rewrites() {
+    if (!backend) return [];
+    return [
+      { source: "/api/:path*", destination: `${backend}/api/:path*` },
+      { source: "/admin/:path*", destination: `${backend}/admin/:path*` },
+      { source: "/admin", destination: `${backend}/admin` },
+      { source: "/invite/:path*", destination: `${backend}/invite/:path*` }
+    ];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },
