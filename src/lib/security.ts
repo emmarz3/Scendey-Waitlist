@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 export function token() { return randomBytes(32).toString("base64url"); }
 export function digest(value: string) { return createHash("sha256").update(value).digest("hex"); }
 
-export async function rateLimit(key: string, limit = 5, windowMs = 60 * 60 * 1000) {
+export async function rateLimit(key: string, limit = 5, windowMs = 60 * 60 * 1000): Promise<boolean | null> {
   const now = new Date();
   const resetAt = new Date(now.getTime() + windowMs);
   try {
@@ -18,7 +18,7 @@ export async function rateLimit(key: string, limit = 5, windowMs = 60 * 60 * 100
     if (row.count >= limit) return false;
     await db.rateLimit.update({ where: { key }, data: { count: { increment: 1 } } });
     return true;
-  } catch { return false; }
+  } catch { return null; }
 }
 
 export async function clientKey(scope: string) {
