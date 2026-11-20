@@ -11,9 +11,11 @@ export const templates = {
 };
 
 export async function sendMail(mail: Mail) {
-  const endpoint = process.env.EMAIL_API_URL;
+  // Resend is the default provider. EMAIL_API_URL remains configurable for
+  // deployments that intentionally use another Resend-compatible endpoint.
+  const endpoint = process.env.EMAIL_API_URL?.trim() || "https://api.resend.com/emails";
   const apiKey = process.env.EMAIL_API_KEY;
-  if (!endpoint || !apiKey || !process.env.EMAIL_FROM) {
+  if (!apiKey || !process.env.EMAIL_FROM) {
     if (process.env.NODE_ENV !== "production") console.info(`[SCENDEY mail preview] ${mail.subject} to ${mail.to}\n${mail.html}`);
     return { sent: false, reason: "Email delivery is not configured." };
   }
