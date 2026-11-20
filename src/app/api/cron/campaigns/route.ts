@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
   const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!secret || supplied.length !== secret.length || !timingSafeEqual(Buffer.from(supplied), Buffer.from(secret))) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  if (!process.env.EMAIL_API_URL || !process.env.EMAIL_API_KEY || !process.env.EMAIL_FROM) return NextResponse.json({ error: "Email delivery is not configured." }, { status: 503 });
+  if (!process.env.EMAIL_API_KEY || !process.env.EMAIL_FROM) return NextResponse.json({ error: "Email delivery is not configured." }, { status: 503 });
 
   const now = new Date();
   const campaigns = await db.campaign.findMany({ where: { status: "SCHEDULED", scheduledAt: { lte: now } }, orderBy: { scheduledAt: "asc" }, take: 10 });
