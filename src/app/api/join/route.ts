@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") return NextResponse.json({ ok: true, existing: true, delivered: false, message: "That email is already registered. If you need help, contact us." });
+    console.error("[SCENDEY] Waitlist signup failed:", error);
     return NextResponse.json({ error: "Signup is temporarily unavailable. Please try again shortly." }, { status: 503 });
   }
 }

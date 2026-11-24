@@ -18,7 +18,10 @@ export async function rateLimit(key: string, limit = 5, windowMs = 60 * 60 * 100
     if (row.count >= limit) return false;
     await db.rateLimit.update({ where: { key }, data: { count: { increment: 1 } } });
     return true;
-  } catch { return null; }
+  } catch (error) {
+    console.error("[SCENDEY] Rate limit database operation failed:", error);
+    return null;
+  }
 }
 
 export async function clientKey(scope: string) {
