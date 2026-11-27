@@ -17,3 +17,18 @@ test("invalid email and excessive interest lists are rejected",()=>{
   assert.equal(signupSchema.safeParse({role:"SHOPPER",email:"bad",consent:false}).success,false);
   assert.equal(signupSchema.safeParse({role:"SHOPPER",email:"ok@example.com",consent:false,interests:Array(21).fill("Home")}).success,false);
 });
+
+
+test("brand signups default to the business audience and retain a contact name",()=>{
+  const result=signupSchema.safeParse({role:"BRAND",email:"owner@example.com",name:"Brand Owner",brandName:"Good Things",category:"Retail",consent:false});
+  assert.equal(result.success,true);
+  if(result.success){assert.equal(result.data.audienceCategory,"BUSINESS");assert.equal(result.data.name,"Brand Owner");}
+});
+
+test("shopper audiences distinguish students, staff and other visitors",()=>{
+  for (const audienceCategory of ["STUDENT","STAFF","OTHER"] as const) {
+    const result=signupSchema.safeParse({role:"SHOPPER",email:"visitor@example.com",name:"Visitor Name",audienceCategory,consent:false});
+    assert.equal(result.success,true);
+    if(result.success)assert.equal(result.data.audienceCategory,audienceCategory);
+  }
+});

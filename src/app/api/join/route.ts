@@ -25,11 +25,13 @@ export async function POST(request: Request) {
     const invitation = data.invitation ? await db.invitation.findUnique({ where: { code: data.invitation } }) : null;
     if (data.invitation && (!invitation || invitation.uses >= invitation.maxUses || (invitation.expiresAt && invitation.expiresAt < new Date()) || (invitation.role && invitation.role !== data.role))) return NextResponse.json({ error: "That invitation is invalid or expired." }, { status: 400 });
     const entry = await db.waitlistEntry.create({ data: {
-      role: data.role, email: data.email, consent: data.consent,
+      role: data.role, audienceCategory: data.audienceCategory, email: data.email, consent: data.consent,
       consentVersion: data.consent ? "2026-11-18" : null, consentAt: data.consent ? new Date() : null,
-      source: data.consent ? data.source : null, utmSource: data.consent ? data.utmSource : null, utmMedium: data.consent ? data.utmMedium : null, utmCampaign: data.consent ? data.utmCampaign : null,
+      // Acquisition attribution is operational analytics, not marketing consent.
+      // Only consent controls campaign email eligibility.
+      source: data.source ?? null, utmSource: data.utmSource ?? null, utmMedium: data.utmMedium ?? null, utmCampaign: data.utmCampaign ?? null,
       invitationCode: invitation?.code,
-      ...(data.role === "BRAND" ? { brandName: data.brandName, category: data.category, sellingStatus: data.sellingStatus, handleOrUrl: data.handleOrUrl, location: data.location, phone: data.phone, salesBlocker: data.salesBlocker } : { name: data.name, location: data.location, interests: JSON.stringify(data.interests) }),
+      ...(data.role === "BRAND" ? { name: data.name ?? null, brandName: data.brandName, category: data.category, sellingStatus: data.sellingStatus, handleOrUrl: data.handleOrUrl, location: data.location, phone: data.phone, salesBlocker: data.salesBlocker } : { name: data.name, location: data.location, interests: JSON.stringify(data.interests) }),
       referredById: referrer?.id
     } });
     const raw = token();
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
     const link = `${process.env.APP_URL ?? new URL(request.url).origin}/confirm/${raw}`;
     const [delivery, notification] = await Promise.all([
       sendMail({ to: data.email, ...templates.verification(link) }),
-      notifyFormspree({ email: data.email, name: data.role === "BRAND" ? data.brandName : data.name ?? "", role: data.role, category: data.role === "BRAND" ? data.category : "", signupId: entry.id, type: "waitlist_signup" })
+      notifyFormspree({ email: data.email, name: data.name ?? (data.role === "BRAND" ? data.brandName : ""), role: data.role, category: data.role === "BRAND" ? data.category : "", signupId: entry.id, type: "waitlist_signup" })
     ]);
     if (!notification.sent && process.env.FORMSPREE_FORM_ID) console.warn(`[SCENDEY] Formspree waitlist notification failed: ${notification.reason}`);
     const response: Record<string, unknown> = { ok: true, existing: false, delivered: delivery.sent };

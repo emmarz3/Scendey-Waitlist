@@ -10,6 +10,7 @@ datasource db {
 model WaitlistEntry {
   id              String       @id @default(cuid())
   role            String
+  audienceCategory String      @default("OTHER")
   email           String       @unique
   name            String?
   brandName       String?
@@ -42,6 +43,7 @@ model WaitlistEntry {
   events          CampaignRecipient[]
   statusHistory   WaitlistStatusEvent[]
   @@index([role, status, createdAt])
+  @@index([audienceCategory, status, createdAt])
   @@index([source, createdAt])
   @@index([invitationCode, createdAt])
 }
