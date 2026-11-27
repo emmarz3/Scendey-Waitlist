@@ -12,14 +12,17 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "node scripts/generate-prisma.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@prisma/client": "^6.19.0",
+    "dotenv": "^8.2.0",
     "gsap": "^3.14.2",
     "jose": "^6.1.0",
     "next": "^15.5.6",
+    "node-fetch": "^3.3.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "zod": "^4.1.12"
@@ -33,5 +36,11 @@
     "prisma": "^6.19.0",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true,
+    "esbuild@0.28.2": true
   }
 }
